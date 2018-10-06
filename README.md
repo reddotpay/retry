@@ -5,13 +5,6 @@
 
 ## Usage
 
-#### func  Execute
-
-```go
-func Execute(retryable Retryable) error
-```
-Execute executes a Retryable
-
 #### func  NoDelay
 
 ```go
@@ -33,13 +26,10 @@ Errors contains a list of error that occurred
 func (errs Errors) Error() string
 ```
 
-#### type Retryable
+#### type Retryer
 
 ```go
-type Retryable struct {
-	// Func defines a function to be retried
-	Func func() error
-
+type Retryer struct {
 	// Attempts defines the number of retries if an error occurs
 	Attempts uint
 
@@ -48,4 +38,11 @@ type Retryable struct {
 }
 ```
 
-Retryable defines a retryable function
+Retryer defines a Retryer function
+
+#### func (Retryer) Try
+
+```go
+func (retryer Retryer) Try(fn func() error) error
+```
+Try executes `fn` and retries on error
