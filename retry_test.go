@@ -10,12 +10,11 @@ import (
 )
 
 func TestRetry_Execute(t *testing.T) {
-	retryable := retry.Retryable{
-		Func:     func() error { return nil },
+	retryer := retry.Retryer{
 		Attempts: 1,
 		Delay:    func() time.Duration { return 0 },
 	}
-	err := retry.Execute(retryable)
+	err := retryer.Try(func() error { return nil })
 
 	assert := assert.New(t)
 	assert.NoError(err)
@@ -24,15 +23,14 @@ func TestRetry_Execute(t *testing.T) {
 func TestRetry_Execute_WithErrors(t *testing.T) {
 	var count uint
 
-	retryable := retry.Retryable{
-		Func: func() error {
-			count++
-			return errors.New("an error occurred")
-		},
+	retryer := retry.Retryer{
 		Attempts: 3,
 		Delay:    retry.NoDelay,
 	}
-	err := retry.Execute(retryable)
+	err := retryer.Try(func() error {
+		count++
+		return errors.New("an error occurred")
+	})
 
 	assert := assert.New(t)
 	assert.Equal(uint(3), count)
@@ -41,12 +39,11 @@ func TestRetry_Execute_WithErrors(t *testing.T) {
 
 func BenchmarkRetry_Execute(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		retryable := retry.Retryable{
-			Func:     func() error { return nil },
+		retryer := retry.Retryer{
 			Attempts: 1,
 			Delay:    func() time.Duration { return 0 },
 		}
-		retry.Execute(retryable)
+		retryer.Try(func() error { return nil })
 	}
 }
 
@@ -54,14 +51,13 @@ func BenchmarkRetry_Execute_WithErrors(b *testing.B) {
 	for n := 0; n < b.N; n++ {
 		var count uint
 
-		retryable := retry.Retryable{
-			Func: func() error {
-				count++
-				return errors.New("an error occurred")
-			},
+		retryer := retry.Retryer{
 			Attempts: 3,
 			Delay:    retry.NoDelay,
 		}
-		retry.Execute(retryable)
+		retryer.Try(func() error {
+			count++
+			return errors.New("an error occurred")
+		})
 	}
 }

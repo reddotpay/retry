@@ -4,11 +4,8 @@ import (
 	"time"
 )
 
-// Retryable defines a retryable function
-type Retryable struct {
-	// Func defines a function to be retried
-	Func func() error
-
+// Retryer defines a Retryer function
+type Retryer struct {
 	// Attempts defines the number of retries if an error occurs
 	Attempts uint
 
@@ -19,15 +16,15 @@ type Retryable struct {
 // NoDelay defines a delay function with no delays
 func NoDelay() time.Duration { return 0 }
 
-// Execute executes a Retryable
-func Execute(retryable Retryable) error {
+// Try executes `fn` and retries on error
+func (retryer Retryer) Try(fn func() error) error {
 	var (
 		n    uint
 		errs Errors
 	)
 
-	for n < retryable.Attempts {
-		err := retryable.Func()
+	for n < retryer.Attempts {
+		err := fn()
 		if err == nil {
 			return nil
 		}
@@ -37,7 +34,7 @@ func Execute(retryable Retryable) error {
 
 		n++
 
-		time.Sleep(retryable.Delay())
+		time.Sleep(retryer.Delay())
 	}
 
 	return errs
